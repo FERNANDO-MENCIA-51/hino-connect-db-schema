@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: hino-connect-api
+  r2dbc:
+    url: r2dbc:postgresql://ep-shy-recipe-ad84kx35-pooler.c-2.us-east-1.aws.neon.tech:5432/neondb?sslmode=require
+    username: neondb_owner
+    password: npg_Eo9ldCsZ7AKr
+
+server:
+  port: 8080
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+jwt:
+  secret: hinoconnect2024secretkeysupersecureandlongforproduction
+  expiration: 86400000 # 24 horas en milisegundos
+
+logging:
+  level:
+    "[org.springframework.r2dbc]": DEBUG
+    "[io.r2dbc.postgresql]": DEBUG
