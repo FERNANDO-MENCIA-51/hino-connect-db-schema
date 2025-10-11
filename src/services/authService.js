@@ -50,7 +50,7 @@ export const authService = {
         }
       } else if (error.request) {
         // La petición se hizo pero no hubo respuesta
-        errorMessage = "No se pudo conectar con el servidor. Verifica que el backend esté corriendo en http://localhost:8080";
+        errorMessage = "No se pudo conectar con el servidor. Verifica que el backend esté corriendo en http://localhost:8081";
       } else {
         errorMessage = error.message;
       }
