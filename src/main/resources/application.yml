@@ -24,3 +24,4 @@ logging:
   level:
     "[org.springframework.r2dbc]": DEBUG
     "[io.r2dbc.postgresql]": DEBUG
+    "[pe.edu.vallegrande.ms_catalogo_vehiculos]": DEBUG
