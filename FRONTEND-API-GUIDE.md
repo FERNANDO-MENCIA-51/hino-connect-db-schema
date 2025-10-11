@@ -17,7 +17,7 @@ Documentación completa para consumir la API desde el frontend.
 ### Base URL
 
 ```javascript
-const API_BASE_URL = "http://localhost:8080/api/v1";
+const API_BASE_URL = "http://localhost:8081/api/v1";
 ```
 
 ### Configuración de Axios (Recomendado)
@@ -26,7 +26,7 @@ const API_BASE_URL = "http://localhost:8080/api/v1";
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080/api/v1",
+  baseURL: "http://localhost:8081/api/v1",
   headers: {
     "Content-Type": "application/json",
   },
@@ -890,9 +890,9 @@ const validateFechaFutura = (fecha) => {
 
 ## 🔗 URLs Importantes
 
-- **API Base**: http://localhost:8080/api/v1
-- **Swagger UI**: http://localhost:8080/swagger-ui.html
-- **OpenAPI Docs**: http://localhost:8080/api-docs
+- **API Base**: http://localhost:8081/api/v1
+- **Swagger UI**: http://localhost:8081/swagger-ui.html
+- **OpenAPI Docs**: http://localhost:8081/api-docs
 
 ---
 

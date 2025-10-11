@@ -51,4 +51,21 @@ public class VehiculoService {
     public Flux<Vehiculo> findByEstado(String estado) {
         return repository.findByEstado(estado);
     }
+    
+    public Flux<Vehiculo> findAllInactive() {
+        return repository.findAllInactive();
+    }
+    
+    public Mono<Vehiculo> findByIdInactive(Integer id) {
+        return repository.findByIdInactive(id);
+    }
+    
+    public Mono<Vehiculo> restore(Integer id) {
+        return repository.findByIdInactive(id)
+                .flatMap(vehiculo -> {
+                    vehiculo.setDeletedAt(null);
+                    vehiculo.setUpdatedAt(LocalDateTime.now());
+                    return repository.save(vehiculo);
+                });
+    }
 }

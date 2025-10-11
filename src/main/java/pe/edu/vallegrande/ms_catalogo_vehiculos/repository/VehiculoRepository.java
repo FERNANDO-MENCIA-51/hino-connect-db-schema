@@ -21,4 +21,10 @@ public interface VehiculoRepository extends R2dbcRepository<Vehiculo, Integer> {
     
     @Query("SELECT * FROM vehiculos WHERE estado_actual = :estado AND deleted_at IS NULL")
     Flux<Vehiculo> findByEstado(String estado);
+    
+    @Query("SELECT * FROM vehiculos WHERE deleted_at IS NOT NULL")
+    Flux<Vehiculo> findAllInactive();
+    
+    @Query("SELECT * FROM vehiculos WHERE id = :id AND deleted_at IS NOT NULL")
+    Mono<Vehiculo> findByIdInactive(Integer id);
 }

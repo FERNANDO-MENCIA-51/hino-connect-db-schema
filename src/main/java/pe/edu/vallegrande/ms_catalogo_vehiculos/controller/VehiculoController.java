@@ -66,4 +66,28 @@ public class VehiculoController {
                 .collectList()
                 .map(list -> ResponseEntity.ok(ApiResponse.success(list)));
     }
+    
+    @GetMapping("/inactivos")
+    @Operation(summary = "Listar todos los vehículos inactivos")
+    public Mono<ResponseEntity<ApiResponse<List<Vehiculo>>>> findAllInactive() {
+        return service.findAllInactive()
+                .collectList()
+                .map(list -> ResponseEntity.ok(ApiResponse.success(list)));
+    }
+    
+    @GetMapping("/inactivos/{id}")
+    @Operation(summary = "Obtener vehículo inactivo por ID")
+    public Mono<ResponseEntity<ApiResponse<Vehiculo>>> findByIdInactive(@PathVariable Integer id) {
+        return service.findByIdInactive(id)
+                .map(vehiculo -> ResponseEntity.ok(ApiResponse.success(vehiculo)))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+    
+    @PutMapping("/restaurar/{id}")
+    @Operation(summary = "Restaurar vehículo inactivo")
+    public Mono<ResponseEntity<ApiResponse<Vehiculo>>> restore(@PathVariable Integer id) {
+        return service.restore(id)
+                .map(restored -> ResponseEntity.ok(ApiResponse.success(restored)))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 }

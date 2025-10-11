@@ -7,7 +7,7 @@ spring:
     password: npg_Eo9ldCsZ7AKr
 
 server:
-  port: 8080
+  port: 8081
 
 springdoc:
   api-docs:

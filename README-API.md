@@ -175,7 +175,7 @@ spring:
     password: npg_Eo9ldCsZ7AKr
 
 server:
-  port: 8080
+  port: 8081
 
 # Configuración JWT
 jwt:
@@ -410,7 +410,7 @@ mvnw.cmd spring-boot:run
 
 ```bash
 # Health check
-curl http://localhost:8080/api/v1/roles
+curl http://localhost:8081/api/v1/roles
 
 # Debería retornar lista de roles
 ```
@@ -418,8 +418,8 @@ curl http://localhost:8080/api/v1/roles
 ### 5. Acceder a Swagger UI
 
 Abre en tu navegador:
-- **Swagger UI**: http://localhost:8080/swagger-ui.html
-- **OpenAPI JSON**: http://localhost:8080/api-docs
+- **Swagger UI**: http://localhost:8081/swagger-ui.html
+- **OpenAPI JSON**: http://localhost:8081/api-docs
 
 ---
 
@@ -428,7 +428,7 @@ Abre en tu navegador:
 ### Probar Login
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/auth/login \
+curl -X POST http://localhost:8081/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@hinoconnect.com",
@@ -443,7 +443,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
 # 2. Usar token en petición
-curl -X POST http://localhost:8080/api/v1/vehiculos \
+curl -X POST http://localhost:8081/api/v1/vehiculos \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
@@ -890,13 +890,13 @@ mvnw clean install -U
 # Si persiste, eliminar carpeta .m2 y volver a compilar
 ```
 
-### Puerto 8080 ya en uso
+### Puerto 8081 ya en uso
 
 **Solución:**
 ```bash
 # Cambiar puerto en application.yml
 server:
-  port: 8081
+  port: 8082
 ```
 
 ---
@@ -991,7 +991,7 @@ server:
 
 Para soporte técnico o consultas:
 - **Email**: soporte@vallegrande.edu.pe
-- **Documentación**: http://localhost:8080/swagger-ui.html
+- **Documentación**: http://localhost:8081/swagger-ui.html
 
 ---
 
