@@ -66,4 +66,17 @@ public class ConductorController {
                 .collectList()
                 .map(list -> ResponseEntity.ok(ApiResponse.success(list)));
     }
+
+    @PutMapping("/restaurar/{id}")
+    @Operation(summary = "Restaurar conductor")
+    public Mono<ResponseEntity<ApiResponse<Conductor>>> restaurar(@PathVariable Integer id) {
+        return service.findById(id)
+                .flatMap(conductor -> {
+                    conductor.setActivo(true);
+                    conductor.setEstado("Activo");
+                    return service.update(id, conductor);
+                })
+                .map(updated -> ResponseEntity.ok(ApiResponse.success(updated)))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 }
