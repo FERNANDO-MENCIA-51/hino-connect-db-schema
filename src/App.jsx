@@ -3,6 +3,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Usuarios from './pages/Usuarios'
 import Vehiculos from './pages/Vehiculos'
+import Conductores from './pages/Conductores'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/usuarios" element={<Usuarios />} />
         <Route path="/vehiculos" element={<Vehiculos />} />
+        <Route path="/conductores" element={<Conductores />} />
       </Routes>
     </Router>
   )
