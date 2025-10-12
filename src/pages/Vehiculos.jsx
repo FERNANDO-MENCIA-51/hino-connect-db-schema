@@ -22,6 +22,10 @@ const Vehiculos = () => {
   const [selectedVehiculo, setSelectedVehiculo] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedVehiculoId, setSelectedVehiculoId] = useState(null);
+  
+  // Estados para paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Estados disponibles
   const estadosVehiculo = [
@@ -52,6 +56,10 @@ const Vehiculos = () => {
   useEffect(() => {
     filtrarVehiculos();
   }, [searchTerm, filterEstado, filterMarca, vehiculos]);
+
+  useEffect(() => {
+    setCurrentPage(1); // Resetear a la primera página cuando cambien los filtros
+  }, [searchTerm, filterEstado, filterMarca]);
 
   // Carga inicial
   const cargarVehiculos = async () => {
@@ -166,6 +174,73 @@ const Vehiculos = () => {
     setFilterEstado("todos");
     setFilterMarca("todos");
     setFilteredVehiculos(vehiculos);
+    setCurrentPage(1);
+  };
+
+  // Lógica de paginación
+  const totalPages = Math.ceil(filteredVehiculos.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentVehiculos = filteredVehiculos.slice(startIndex, endIndex);
+
+  // Función para cambiar de página
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Función para ir a la página anterior
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Función para ir a la página siguiente
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Generar números de página para mostrar
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      // Mostrar todas las páginas si son pocas
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Lógica para mostrar páginas con elipsis
+      if (currentPage <= 3) {
+        // Al inicio
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // Al final
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // En el medio
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
   };
 
   // Buscar por estado (función auxiliar para casos especiales)
@@ -366,30 +441,33 @@ const Vehiculos = () => {
 
   return (
     <MainLayout activeMenu="Vehículos">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-              <FiTruck className="text-blue-600" />
-              Vehículos
-            </h1>
-            <p className="text-gray-500 text-sm mt-1">
-              Administra y gestiona la flota de vehículos del sistema
-            </p>
-          </div>
-          <button
-            onClick={handleCrearVehiculo}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            <FiPlus className="text-xl" />
-            Nuevo Vehículo
-          </button>
-        </div>
-      </div>
-
       {/* Contenido */}
       <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full">
+                <FiTruck className="text-white text-3xl" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800">
+                  Vehículos
+                </h1>
+                <p className="text-gray-500 text-sm mt-1">
+                  Administra y gestiona la flota de vehículos del sistema
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleCrearVehiculo}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+            >
+              <FiPlus className="text-xl" />
+              Nuevo Vehículo
+            </button>
+          </div>
+        </div>
         <VehiculoFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -418,20 +496,20 @@ const Vehiculos = () => {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Placa</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca/Modelo</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Año</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacidad</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Código</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Placa</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Marca/Modelo</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tipo</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Año</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Capacidad</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Estado</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredVehiculos.map((vehiculo) => (
+                  {currentVehiculos.map((vehiculo) => (
                     <tr key={vehiculo.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{vehiculo.codigo}</td>
                       <td className="px-6 py-4 text-sm text-gray-900 font-mono">{vehiculo.placa}</td>
@@ -493,6 +571,54 @@ const Vehiculos = () => {
             </div>
           )}
         </div>
+
+        {/* Paginación */}
+        {filteredVehiculos.length > 0 && totalPages > 1 && (
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Mostrando {startIndex + 1} a {Math.min(endIndex, filteredVehiculos.length)} de {filteredVehiculos.length} vehículos
+              </div>
+              <div className="flex items-center space-x-2">
+                {/* Botón anterior */}
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  &lt;
+                </button>
+
+                {/* Números de página */}
+                {getPageNumbers().map((page, index) => (
+                  <button
+                    key={index}
+                    onClick={() => typeof page === 'number' ? handlePageChange(page) : null}
+                    disabled={page === '...'}
+                    className={`px-3 py-2 text-sm font-medium rounded-md ${
+                      page === currentPage
+                        ? 'bg-blue-600 text-white'
+                        : page === '...'
+                        ? 'text-gray-500 cursor-default'
+                        : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                {/* Botón siguiente */}
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  &gt;
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Modales */}
         {isModalOpen && (
