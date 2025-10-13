@@ -59,6 +59,15 @@ public class UsuarioService {
                 })
                 .then();
     }
+
+    public Mono<Void> restore(Integer id) {
+        return repository.findByIdInactive(id)
+                .flatMap(usuario -> {
+                    usuario.setDeletedAt(null);
+                    return repository.save(usuario);
+                })
+                .then();
+    }
     
     public Mono<Boolean> validatePassword(String rawPassword, String encodedPassword) {
         return Mono.just(passwordEncoder.matches(rawPassword, encodedPassword));

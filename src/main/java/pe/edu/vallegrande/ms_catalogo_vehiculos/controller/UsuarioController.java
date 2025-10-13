@@ -58,4 +58,11 @@ public class UsuarioController {
         return service.delete(id)
                 .then(Mono.just(ResponseEntity.ok(ApiResponse.success(null))));
     }
+
+    @PutMapping("/{id}/restore")
+    @Operation(summary = "Restaurar usuario")
+    public Mono<ResponseEntity<ApiResponse<Void>>> restore(@PathVariable Integer id) {
+        return service.restore(id)
+                .then(Mono.just(ResponseEntity.ok(ApiResponse.success(null))));
+    }
 }

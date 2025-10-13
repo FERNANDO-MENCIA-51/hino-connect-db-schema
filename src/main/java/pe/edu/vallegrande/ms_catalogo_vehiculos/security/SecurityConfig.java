@@ -45,6 +45,7 @@ public class SecurityConfig {
                         // Rutas públicas
                         .pathMatchers("/api/v1/auth/**").permitAll()
                         .pathMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**", "/api-docs/**").permitAll()
+                        .pathMatchers("/actuator/**").permitAll() // Actuator endpoints
                         // Permitir todos los métodos HTTP para desarrollo
                         .pathMatchers("/api/v1/**").permitAll()
                         .anyExchange().authenticated()

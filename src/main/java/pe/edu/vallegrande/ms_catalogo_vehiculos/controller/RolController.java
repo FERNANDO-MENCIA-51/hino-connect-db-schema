@@ -58,4 +58,11 @@ public class RolController {
         return service.delete(id)
                 .then(Mono.just(ResponseEntity.ok(ApiResponse.success(null))));
     }
+
+    @PutMapping("/{id}/restore")
+    @Operation(summary = "Restaurar rol")
+    public Mono<ResponseEntity<ApiResponse<Void>>> restore(@PathVariable Integer id) {
+        return service.restore(id)
+                .then(Mono.just(ResponseEntity.ok(ApiResponse.success(null))));
+    }
 }

@@ -18,4 +18,7 @@ public interface UsuarioRepository extends R2dbcRepository<Usuario, Integer> {
     
     @Query("SELECT * FROM usuarios WHERE email = :email AND deleted_at IS NULL")
     Mono<Usuario> findByEmail(String email);
+
+    @Query("SELECT * FROM usuarios WHERE id = :id AND deleted_at IS NOT NULL")
+    Mono<Usuario> findByIdInactive(Integer id);
 }

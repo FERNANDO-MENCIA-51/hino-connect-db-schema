@@ -1,0 +1,21 @@
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb
+    username: sa
+    password: ""
+
+jwt:
+  secret: testsecretkeyforthejunittests
+  expiration: 3600000 # 1 hour for tests
+
+logging:
+  level:
+    "[org.springframework.r2dbc]": WARN
+    "[io.r2dbc]": WARN
+    "[pe.edu.vallegrande.ms_catalogo_vehiculos]": INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

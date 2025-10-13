@@ -47,4 +47,13 @@ public class RolService {
                 })
                 .then();
     }
+
+    public Mono<Void> restore(Integer id) {
+        return repository.findByIdInactive(id)
+                .flatMap(rol -> {
+                    rol.setDeletedAt(null);
+                    return repository.save(rol);
+                })
+                .then();
+    }
 }

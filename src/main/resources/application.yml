@@ -25,3 +25,25 @@ logging:
     "[org.springframework.r2dbc]": DEBUG
     "[io.r2dbc.postgresql]": DEBUG
     "[pe.edu.vallegrande.ms_catalogo_vehiculos]": DEBUG
+
+# Actuator - Monitoreo y métricas
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# Información de la aplicación
+info:
+  app:
+    name: HINO Connect API
+    description: API REST para gestión de flota de vehículos HINO
+    version: 1.0.0
+    author: Valle Grande

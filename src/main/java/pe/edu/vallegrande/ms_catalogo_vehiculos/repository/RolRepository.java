@@ -18,4 +18,7 @@ public interface RolRepository extends R2dbcRepository<Rol, Integer> {
     
     @Query("SELECT * FROM roles WHERE nombre = :nombre AND deleted_at IS NULL")
     Mono<Rol> findByNombre(String nombre);
+
+    @Query("SELECT * FROM roles WHERE id = :id AND deleted_at IS NOT NULL")
+    Mono<Rol> findByIdInactive(Integer id);
 }
