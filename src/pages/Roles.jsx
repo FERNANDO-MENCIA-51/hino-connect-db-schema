@@ -1,25 +1,21 @@
 import { useState, useEffect } from "react";
-import { vehiculoService } from "../services/vehiculoService";
+import { rolService } from "../services/rolService";
 import {
   showSuccessAlert,
   showErrorAlert,
   showConfirmAlert,
 } from "../utils/sweetAlertConfig";
-import VehiculoModal from "../components/vehiculos/VehiculoModal";
-import VehiculoDetail from "../components/vehiculos/VehiculoDetail";
+import RolModal from "../components/usuarios/RolModal";
 import MainLayout from "../components/layout/MainLayout";
 import FilterPanel, { useFilters } from "../components/common/FilterPanel";
-import { VehicleStatusBadge } from "../components/common/StatusBadge";
-import { VEHICLE_STATES } from "../constants";
-import { FiPlus, FiEdit2, FiTrash2, FiEye, FiRefreshCw } from "react-icons/fi";
+import StatusBadge from "../components/common/StatusBadge";
+import { FiPlus, FiEdit2, FiTrash2, FiRefreshCw } from "react-icons/fi";
 
-const Vehiculos = () => {
-  const [vehiculos, setVehiculos] = useState([]);
+const Roles = () => {
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedVehiculo, setSelectedVehiculo] = useState(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedVehiculoId, setSelectedVehiculoId] = useState(null);
+  const [selectedRol, setSelectedRol] = useState(null);
 
   // Hook para manejar filtros
   const {
@@ -27,99 +23,82 @@ const Vehiculos = () => {
     setSearchTerm,
     activeFilter,
     setActiveFilter,
-    filters,
-    updateFilter,
     getFilteredData
-  } = useFilters({
-    marca: '',
-    tipo: '',
-    estado: '',
-    fechaCreacion: ''
-  });
+  } = useFilters();
 
   useEffect(() => {
-    cargarVehiculos();
+    cargarRoles();
   }, []);
 
-  const cargarVehiculos = async () => {
+  const cargarRoles = async () => {
     try {
       setLoading(true);
-      console.log("🔄 Cargando vehículos...");
-      const data = await vehiculoService.listarVehiculos();
-      console.log("📊 Datos recibidos del backend:", data);
-      setVehiculos(data.data || []);
+      const data = await rolService.listarRoles();
+      setRoles(data.data || []);
     } catch (error) {
-      console.error("❌ Error al cargar vehículos:", error);
       showErrorAlert("Error", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Función personalizada de filtrado para vehículos
-  const customVehiculoFilter = (vehiculo, searchTerm) => {
+  // Función personalizada de filtrado para roles
+  const customRolFilter = (rol, searchTerm) => {
     return (
-      vehiculo.codigo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehiculo.placa?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehiculo.marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehiculo.modelo?.toLowerCase().includes(searchTerm.toLowerCase())
+      rol.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rol.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
-  // Obtener vehículos filtrados
-  const filteredVehiculos = getFilteredData(vehiculos, customVehiculoFilter);
+  // Obtener roles filtrados
+  const filteredRoles = getFilteredData(roles, customRolFilter);
 
-  const handleCrearVehiculo = () => {
-    setSelectedVehiculo(null);
+  const handleCrearRol = () => {
+    setSelectedRol(null);
     setIsModalOpen(true);
   };
 
-  const handleEditarVehiculo = (vehiculo) => {
-    setSelectedVehiculo(vehiculo);
+  const handleEditarRol = (rol) => {
+    setSelectedRol(rol);
     setIsModalOpen(true);
   };
 
-  const handleVerVehiculo = (vehiculoId) => {
-    setSelectedVehiculoId(vehiculoId);
-    setIsDetailOpen(true);
-  };
-
-  const handleEliminarVehiculo = async (id) => {
+  const handleEliminarRol = async (id) => {
     const result = await showConfirmAlert(
-      "¿Estás seguro de eliminar este vehículo?",
-      "Al eliminar el vehículo, este será removido de tu lista. Podrás volver a activarlo en el futuro si lo necesitas."
+      "¿Estás seguro de eliminar este rol?",
+      "Al eliminar el rol, este será removido de tu lista. Podrás volver a activarlo en el futuro si lo necesitas."
     );
 
     if (result.isConfirmed) {
       try {
-        await vehiculoService.eliminarVehiculo(id);
+        await rolService.eliminarRol(id);
         showSuccessAlert(
-          "¡Vehículo eliminado exitosamente!",
-          "El vehículo ha sido eliminado correctamente."
+          "¡Rol eliminado exitosamente!",
+          "El rol ha sido eliminado correctamente."
         );
-        cargarVehiculos();
+        cargarRoles();
       } catch (error) {
         showErrorAlert("Error", error);
       }
     }
   };
 
-  const handleRestaurarVehiculo = async (id) => {
+  const handleRestaurarRol = async (id) => {
     const result = await showConfirmAlert(
-      "¿Estás seguro de restaurar este vehículo?",
-      "El vehículo volverá a estar activo en el sistema.",
+      "¿Estás seguro de restaurar este rol?",
+      "El rol volverá a estar activo en el sistema.",
       "Sí, restaurar",
       "Cancelar"
     );
 
     if (result.isConfirmed) {
       try {
-        await vehiculoService.restaurarVehiculo(id);
+        await rolService.restaurarRol(id);
         showSuccessAlert(
-          "¡Vehículo restaurado exitosamente!",
-          "El vehículo ha sido restaurado correctamente."
+          "¡Rol restaurado exitosamente!",
+          "El rol ha sido restaurado correctamente."
         );
-        cargarVehiculos();
+        cargarRoles();
       } catch (error) {
         showErrorAlert("Error", error);
       }
@@ -128,36 +107,31 @@ const Vehiculos = () => {
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    setSelectedVehiculo(null);
+    setSelectedRol(null);
   };
 
   const handleModalSuccess = () => {
-    cargarVehiculos();
+    cargarRoles();
     handleModalClose();
   };
 
-  const handleDetailClose = () => {
-    setIsDetailOpen(false);
-    setSelectedVehiculoId(null);
-  };
-
   return (
-    <MainLayout activeMenu="Vehículos">
+    <MainLayout activeMenu="Roles">
       {/* Header Superior */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Gestión de Vehículos</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Gestión de Roles</h1>
             <p className="text-gray-500 text-sm mt-1">
-              Administra y gestiona la flota de vehículos
+              Administra y gestiona los roles del sistema
             </p>
           </div>
           <button
-            onClick={handleCrearVehiculo}
+            onClick={handleCrearRol}
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
           >
             <FiPlus className="text-xl" />
-            Nuevo Vehículo
+            Nuevo Rol
           </button>
         </div>
       </div>
@@ -169,72 +143,39 @@ const Vehiculos = () => {
           onSearchChange={setSearchTerm}
           activeFilterValue={activeFilter}
           onActiveFilterChange={setActiveFilter}
-          searchPlaceholder="Buscar por código, placa, marca o modelo..."
+          searchPlaceholder="Buscar por nombre o descripción..."
           activeLabel="Activos"
           inactiveLabel="Eliminados"
           allLabel="Todos"
           filters={[
             {
-              key: 'marca',
-              label: 'Marca',
-              type: 'select',
-              value: filters.marca,
-              options: [
-                { value: 'HINO', label: 'HINO' },
-                { value: 'VOLVO', label: 'VOLVO' },
-                { value: 'SCANIA', label: 'SCANIA' },
-                { value: 'MERCEDES', label: 'MERCEDES' }
-              ]
-            },
-            {
-              key: 'tipo',
-              label: 'Tipo',
-              type: 'select',
-              value: filters.tipo,
-              options: [
-                { value: 'Camión', label: 'Camión' },
-                { value: 'Semitrailer', label: 'Semitrailer' },
-                { value: 'Trailer', label: 'Trailer' }
-              ]
-            },
-            {
-              key: 'estadoActual',
-              label: 'Estado',
-              type: 'select',
-              value: filters.estado,
-              options: Object.values(VEHICLE_STATES).map(estado => ({
-                value: estado,
-                label: estado
-              }))
-            },
-            {
               key: 'fechaCreacion',
               label: 'Fecha de Creación',
               type: 'date',
-              value: filters.fechaCreacion
+              value: ''
             }
           ]}
-          onFilterChange={updateFilter}
+          onFilterChange={() => {}}
         />
 
         {/* Badges de estado */}
         <div className="flex gap-4">
           <div className="bg-success-500 text-white px-6 py-3 rounded-lg flex items-center gap-2">
-            <span className="font-semibold">Vehículos Activos</span>
+            <span className="font-semibold">Roles Activos</span>
             <span className="bg-white text-success-500 px-3 py-1 rounded-full font-bold">
-              {vehiculos.filter(v => v.activo && !v.deletedAt).length}
+              {roles.filter(r => !r.deletedAt).length}
             </span>
           </div>
           <div className="bg-danger-500 text-white px-6 py-3 rounded-lg flex items-center gap-2">
-            <span className="font-semibold">Vehículos Eliminados</span>
+            <span className="font-semibold">Roles Eliminados</span>
             <span className="bg-white text-danger-500 px-3 py-1 rounded-full font-bold">
-              {vehiculos.filter(v => !v.activo || v.deletedAt).length}
+              {roles.filter(r => r.deletedAt).length}
             </span>
           </div>
           <div className="bg-info-500 text-white px-6 py-3 rounded-lg flex items-center gap-2">
             <span className="font-semibold">Resultados Filtrados</span>
             <span className="bg-white text-info-500 px-3 py-1 rounded-full font-bold">
-              {filteredVehiculos.length}
+              {filteredRoles.length}
             </span>
           </div>
         </div>
@@ -254,18 +195,12 @@ const Vehiculos = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0M15 17a2 2 0 104 0"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                   />
                 </svg>
               </div>
               <h2 className="text-lg font-semibold text-gray-800">
-                Tabla de Vehículos
+                Tabla de Roles
               </h2>
             </div>
           </div>
@@ -273,11 +208,11 @@ const Vehiculos = () => {
           {loading ? (
             <div className="p-12 text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-              <p className="mt-4 text-gray-600">Cargando vehículos...</p>
+              <p className="mt-4 text-gray-600">Cargando roles...</p>
             </div>
-          ) : filteredVehiculos.length === 0 ? (
+          ) : filteredRoles.length === 0 ? (
             <div className="p-12 text-center text-gray-500">
-              <p>No se encontraron vehículos</p>
+              <p>No se encontraron roles</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -285,22 +220,19 @@ const Vehiculos = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Código
+                      ID
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Placa
+                      Nombre
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Marca/Modelo
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tipo
+                      Descripción
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Estado
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Capacidad
+                      Fecha Creación
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Acciones
@@ -308,34 +240,31 @@ const Vehiculos = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredVehiculos.map((vehiculo) => (
-                    <tr key={vehiculo.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {vehiculo.codigo}
-                      </td>
+                  {filteredRoles.map((rol) => (
+                    <tr key={rol.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {vehiculo.placa}
+                        {rol.id}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        <div>
-                          <div className="font-medium">{vehiculo.marca}</div>
-                          <div className="text-gray-500">{vehiculo.modelo}</div>
-                        </div>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {rol.nombre}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {vehiculo.tipo}
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {rol.descripcion || "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <VehicleStatusBadge status={vehiculo.estadoActual} />
+                        <StatusBadge 
+                          status={rol.deletedAt ? 'Eliminado' : 'Activo'}
+                          variant={rol.deletedAt ? 'danger' : 'success'}
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {vehiculo.capacidadCarga ? `${vehiculo.capacidadCarga} kg` : "-"}
+                        {new Date(rol.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex gap-2">
-                          {vehiculo.deletedAt ? (
+                          {rol.deletedAt ? (
                             <button
-                              onClick={() => handleRestaurarVehiculo(vehiculo.id)}
+                              onClick={() => handleRestaurarRol(rol.id)}
                               className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded transition-colors"
                               title="Restaurar"
                             >
@@ -344,21 +273,14 @@ const Vehiculos = () => {
                           ) : (
                             <>
                               <button
-                                onClick={() => handleVerVehiculo(vehiculo.id)}
-                                className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded transition-colors"
-                                title="Ver detalles"
-                              >
-                                <FiEye className="text-lg" />
-                              </button>
-                              <button
-                                onClick={() => handleEditarVehiculo(vehiculo)}
+                                onClick={() => handleEditarRol(rol)}
                                 className="text-green-600 hover:text-green-900 p-2 hover:bg-green-50 rounded transition-colors"
                                 title="Editar"
                               >
                                 <FiEdit2 className="text-lg" />
                               </button>
                               <button
-                                onClick={() => handleEliminarVehiculo(vehiculo.id)}
+                                onClick={() => handleEliminarRol(rol.id)}
                                 className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded transition-colors"
                                 title="Eliminar"
                               >
@@ -376,19 +298,12 @@ const Vehiculos = () => {
           )}
         </div>
 
-        {/* Modales */}
+        {/* Modal */}
         {isModalOpen && (
-          <VehiculoModal
-            vehiculo={selectedVehiculo}
+          <RolModal
+            rol={selectedRol}
             onClose={handleModalClose}
             onSuccess={handleModalSuccess}
-          />
-        )}
-
-        {isDetailOpen && (
-          <VehiculoDetail
-            vehiculoId={selectedVehiculoId}
-            onClose={handleDetailClose}
           />
         )}
       </div>
@@ -396,4 +311,4 @@ const Vehiculos = () => {
   );
 };
 
-export default Vehiculos;
+export default Roles;

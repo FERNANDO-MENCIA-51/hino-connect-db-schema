@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { Calendar } from "lucide-react";
 import MainLayout from "../components/layout/MainLayout";
+import { dashboardService } from "../services/dashboardService";
 import {
   LineChart,
   Line,
@@ -17,33 +19,53 @@ import {
 } from "recharts";
 
 const Dashboard = () => {
-  // Datos para los gráficos
-  const movimientosData = [
-    { mes: "Ene", valor1: 520, valor2: 320 },
-    { mes: "Feb", valor1: 580, valor2: 420 },
-    { mes: "Mar", valor1: 530, valor2: 480 },
-    { mes: "Abr", valor1: 620, valor2: 380 },
-    { mes: "May", valor1: 590, valor2: 520 },
-    { mes: "Jun", valor1: 550, valor2: 450 },
-    { mes: "Jul", valor1: 600, valor2: 500 },
-    { mes: "Ago", valor1: 580, valor2: 420 },
-    { mes: "Sept", valor1: 620, valor2: 480 },
-  ];
+  // Estados para los datos
+  const [stats, setStats] = useState({
+    vehiculos: { total: 0, activos: 0, enMantenimiento: 0, disponibles: 0, inactivos: 0 },
+    conductores: { total: 0, activos: 0, inactivos: 0, enViaje: 0 },
+    usuarios: { total: 0, activos: 0, inactivos: 0 },
+    movimientos: { total: 0, completados: 0, enCurso: 0, programados: 0, cancelados: 0 }
+  });
+  const [movimientosData, setMovimientosData] = useState([]);
+  const [movimientoGraficoData, setMovimientoGraficoData] = useState([]);
+  const [usuariosData, setUsuariosData] = useState([]);
+  const [percentages, setPercentages] = useState({ vehiculos: 0, usuarios: 0, movimientos: 0 });
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('vehiculos');
 
-  const movimientoGraficoData = [
-    { mes: "Lun", valor: 45 },
-    { mes: "Mar", valor: 52 },
-    { mes: "Mier", valor: 48 },
-    { mes: "Juev", valor: 55 },
-    { mes: "Vier", valor: 50 },
-    { mes: "Sab", valor: 58 },
-    { mes: "Dom", valor: 53 },
-  ];
+  // Cargar datos al montar el componente
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  const usuariosData = [
-    { name: "Inactivos", value: 40, color: "#a78bfa" },
-    { name: "Activos", value: 32, color: "#6366f1" },
-  ];
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Cargar todas las estadísticas
+      const [statsResponse, movimientosResponse, semanalResponse, usuariosResponse] = await Promise.all([
+        dashboardService.getStats(),
+        dashboardService.getMovimientosChart(),
+        dashboardService.getMovimientoSemanal(),
+        dashboardService.getUsuariosStats()
+      ]);
+
+      const statsData = statsResponse.data;
+      setStats(statsData);
+      setMovimientosData(movimientosResponse.data);
+      setMovimientoGraficoData(semanalResponse.data);
+      setUsuariosData(usuariosResponse.data);
+
+      // Calcular porcentajes
+      const calculatedPercentages = dashboardService.calculatePercentages(statsData);
+      setPercentages(calculatedPercentages);
+
+    } catch (error) {
+      console.error("Error al cargar datos del dashboard:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <MainLayout activeMenu="Dashboard">
@@ -73,7 +95,9 @@ const Dashboard = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-3xl font-bold text-gray-800">10</p>
+                <p className="text-3xl font-bold text-gray-800">
+                  {loading ? "..." : stats.vehiculos.total}
+                </p>
                 <p className="text-gray-500 text-sm">Vehículos</p>
               </div>
             </div>
@@ -88,7 +112,9 @@ const Dashboard = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-3xl font-bold text-gray-800">5</p>
+                <p className="text-3xl font-bold text-gray-800">
+                  {loading ? "..." : stats.conductores.total}
+                </p>
                 <p className="text-gray-500 text-sm">Conductores</p>
               </div>
             </div>
@@ -103,7 +129,9 @@ const Dashboard = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-3xl font-bold text-gray-800">2</p>
+                <p className="text-3xl font-bold text-gray-800">
+                  {loading ? "..." : stats.usuarios.total}
+                </p>
                 <p className="text-gray-500 text-sm">Usuarios</p>
               </div>
             </div>
@@ -118,7 +146,9 @@ const Dashboard = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-3xl font-bold text-gray-800">12</p>
+                <p className="text-3xl font-bold text-gray-800">
+                  {loading ? "..." : stats.movimientos.total}
+                </p>
                 <p className="text-gray-500 text-sm">Movimientos</p>
               </div>
             </div>
@@ -131,25 +161,49 @@ const Dashboard = () => {
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex gap-8">
-                <button className="text-gray-800 font-medium border-b-2 border-primary-600 pb-2">
+                <button 
+                  onClick={() => setActiveTab('vehiculos')}
+                  className={`font-medium pb-2 transition-colors ${
+                    activeTab === 'vehiculos' 
+                      ? 'text-gray-800 border-b-2 border-primary-600' 
+                      : 'text-gray-500 hover:text-gray-800'
+                  }`}
+                >
                   Vehículos
                 </button>
-                <button className="text-gray-500 hover:text-gray-800 pb-2">
+                <button 
+                  onClick={() => setActiveTab('usuarios')}
+                  className={`font-medium pb-2 transition-colors ${
+                    activeTab === 'usuarios' 
+                      ? 'text-gray-800 border-b-2 border-primary-600' 
+                      : 'text-gray-500 hover:text-gray-800'
+                  }`}
+                >
                   Usuarios
                 </button>
-                <button className="text-gray-500 hover:text-gray-800 pb-2">
+                <button 
+                  onClick={() => setActiveTab('movimientos')}
+                  className={`font-medium pb-2 transition-colors ${
+                    activeTab === 'movimientos' 
+                      ? 'text-gray-800 border-b-2 border-primary-600' 
+                      : 'text-gray-500 hover:text-gray-800'
+                  }`}
+                >
                   Movimientos
                 </button>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-              {/* Vehículos Chart */}
+              {/* Gráfico Principal - Cambia según pestaña activa */}
               <div className="text-center">
                 <ResponsiveContainer width="100%" height={120}>
                   <PieChart>
                     <Pie
-                      data={[{ value: 81 }, { value: 19 }]}
+                      data={[
+                        { value: percentages[activeTab] }, 
+                        { value: 100 - percentages[activeTab] }
+                      ]}
                       cx="50%"
                       cy="50%"
                       innerRadius={35}
@@ -158,59 +212,85 @@ const Dashboard = () => {
                       endAngle={-270}
                       dataKey="value"
                     >
-                      <Cell fill="#ef4444" />
-                      <Cell fill="#fee2e2" />
+                      <Cell fill={
+                        activeTab === 'vehiculos' ? "#ef4444" :
+                        activeTab === 'usuarios' ? "#22c55e" :
+                        "#3b82f6"
+                      } />
+                      <Cell fill={
+                        activeTab === 'vehiculos' ? "#fee2e2" :
+                        activeTab === 'usuarios' ? "#dcfce7" :
+                        "#dbeafe"
+                      } />
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
-                <p className="text-2xl font-bold text-gray-800 mt-2">81%</p>
-                <p className="text-sm text-gray-500">Total Vehículos</p>
+                <p className="text-2xl font-bold text-gray-800 mt-2">
+                  {loading ? "..." : `${percentages[activeTab]}%`}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {activeTab === 'vehiculos' ? 'Vehículos Activos' :
+                   activeTab === 'usuarios' ? 'Usuarios Activos' :
+                   'Movimientos Completados'}
+                </p>
               </div>
 
-              {/* Usuarios Chart */}
-              <div className="text-center">
-                <ResponsiveContainer width="100%" height={120}>
-                  <PieChart>
-                    <Pie
-                      data={[{ value: 22 }, { value: 78 }]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={35}
-                      outerRadius={50}
-                      startAngle={90}
-                      endAngle={-270}
-                      dataKey="value"
-                    >
-                      <Cell fill="#22c55e" />
-                      <Cell fill="#dcfce7" />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <p className="text-2xl font-bold text-gray-800 mt-2">22%</p>
-                <p className="text-sm text-gray-500">Total Usuarios</p>
-              </div>
+              {/* Detalles por categoría */}
+              <div className="col-span-2">
+                {activeTab === 'vehiculos' && (
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <p className="font-semibold text-green-800">Activos</p>
+                      <p className="text-2xl font-bold text-green-600">{stats.vehiculos.activos}</p>
+                    </div>
+                    <div className="bg-yellow-50 p-3 rounded-lg">
+                      <p className="font-semibold text-yellow-800">En Mantenimiento</p>
+                      <p className="text-2xl font-bold text-yellow-600">{stats.vehiculos.enMantenimiento}</p>
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <p className="font-semibold text-blue-800">Disponibles</p>
+                      <p className="text-2xl font-bold text-blue-600">{stats.vehiculos.disponibles}</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="font-semibold text-gray-800">Inactivos</p>
+                      <p className="text-2xl font-bold text-gray-600">{stats.vehiculos.inactivos}</p>
+                    </div>
+                  </div>
+                )}
 
-              {/* Movimientos Chart */}
-              <div className="text-center">
-                <ResponsiveContainer width="100%" height={120}>
-                  <PieChart>
-                    <Pie
-                      data={[{ value: 62 }, { value: 38 }]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={35}
-                      outerRadius={50}
-                      startAngle={90}
-                      endAngle={-270}
-                      dataKey="value"
-                    >
-                      <Cell fill="#3b82f6" />
-                      <Cell fill="#dbeafe" />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <p className="text-2xl font-bold text-gray-800 mt-2">62%</p>
-                <p className="text-sm text-gray-500">Total Movimientos</p>
+                {activeTab === 'usuarios' && (
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <p className="font-semibold text-green-800">Activos</p>
+                      <p className="text-2xl font-bold text-green-600">{stats.usuarios.activos}</p>
+                    </div>
+                    <div className="bg-red-50 p-3 rounded-lg">
+                      <p className="font-semibold text-red-800">Inactivos</p>
+                      <p className="text-2xl font-bold text-red-600">{stats.usuarios.inactivos}</p>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'movimientos' && (
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <p className="font-semibold text-green-800">Completados</p>
+                      <p className="text-2xl font-bold text-green-600">{stats.movimientos.completados}</p>
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <p className="font-semibold text-blue-800">En Curso</p>
+                      <p className="text-2xl font-bold text-blue-600">{stats.movimientos.enCurso}</p>
+                    </div>
+                    <div className="bg-yellow-50 p-3 rounded-lg">
+                      <p className="font-semibold text-yellow-800">Programados</p>
+                      <p className="text-2xl font-bold text-yellow-600">{stats.movimientos.programados}</p>
+                    </div>
+                    <div className="bg-red-50 p-3 rounded-lg">
+                      <p className="font-semibold text-red-800">Cancelados</p>
+                      <p className="text-2xl font-bold text-red-600">{stats.movimientos.cancelados}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

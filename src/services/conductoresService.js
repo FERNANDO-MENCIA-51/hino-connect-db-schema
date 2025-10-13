@@ -2,7 +2,7 @@ import api from "../config/api";
 
 const BASE_URL = "/conductores";
 
-export const conductorService = {
+export const conductoresService = {
     listarConductores: async () => {
         try {
             const response = await api.get(BASE_URL);
@@ -75,12 +75,22 @@ export const conductorService = {
     },
 
 
-    restaurarConductor: async (conductor) => {
+    eliminarConductor: async (id) => {
         try {
-            const response = await api.put(`${BASE_URL}/restaurar/${conductor.id}`);
+            const response = await api.delete(`${BASE_URL}/${id}`);
             return response.data;
         } catch (error) {
-            console.error(`Error al restaurar conductor ${conductor.id}:`, error);
+            console.error(`Error al eliminar conductor ${id}:`, error);
+            throw error.response?.data?.message || "Error al eliminar conductor";
+        }
+    },
+
+    restaurarConductor: async (id) => {
+        try {
+            const response = await api.put(`${BASE_URL}/restaurar/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error(`Error al restaurar conductor ${id}:`, error);
             throw error.response?.data?.message || "Error al restaurar conductor";
         }
     },

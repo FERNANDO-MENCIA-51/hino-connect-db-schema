@@ -44,4 +44,26 @@ export const rolService = {
             throw error.response?.data?.message || "Error al eliminar rol";
         }
     },
+
+    // Restaurar rol
+    restaurarRol: async (id) => {
+        try {
+            const response = await api.put(`/roles/${id}/restore`);
+            return response.data;
+        } catch (error) {
+            console.error("Error al restaurar rol:", error);
+            throw error.response?.data?.message || "Error al restaurar rol";
+        }
+    },
+
+    // Listar roles eliminados
+    listarRolesEliminados: async () => {
+        try {
+            const response = await api.get("/roles/deleted");
+            return response.data;
+        } catch (error) {
+            console.error("Error al listar roles eliminados:", error);
+            throw error.response?.data?.message || "Error al obtener roles eliminados";
+        }
+    },
 };

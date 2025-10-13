@@ -10,12 +10,18 @@ import {
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../../services/authService";
+import { notificationService } from "../../services/notificationService";
+import NotificationDropdown from "../common/NotificationDropdown";
+import MessageDropdown from "../common/MessageDropdown";
 
 const Header = () => {
-  const [notifications] = useState(3);
-  const [messages] = useState(5);
+  const [unreadCounts, setUnreadCounts] = useState({ notifications: 0, messages: 0 });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const notificationRef = useRef(null);
+  const messageRef = useRef(null);
   const navigate = useNavigate();
 
   const userName = localStorage.getItem("userName") || "Admin Sistema";
@@ -29,17 +35,40 @@ const Header = () => {
     return name.substring(0, 2).toUpperCase();
   };
 
-  // Cerrar dropdown al hacer clic fuera
+  // Cargar conteos de notificaciones al montar el componente
+  useEffect(() => {
+    loadUnreadCounts();
+    // Actualizar conteos cada 30 segundos
+    const interval = setInterval(loadUnreadCounts, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Cerrar dropdowns al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setIsNotificationOpen(false);
+      }
+      if (messageRef.current && !messageRef.current.contains(event.target)) {
+        setIsMessageOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const loadUnreadCounts = async () => {
+    try {
+      const counts = await notificationService.getUnreadCount();
+      setUnreadCounts(counts);
+    } catch (error) {
+      console.error("Error al cargar conteos:", error);
+    }
+  };
 
   const handleLogout = () => {
     authService.logout();
@@ -64,24 +93,50 @@ const Header = () => {
         {/* Iconos y Usuario */}
         <div className="flex items-center gap-4">
           {/* Notificaciones */}
-          <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <Bell className="w-5 h-5 text-gray-600" />
-            {notifications > 0 && (
-              <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                {notifications}
-              </span>
-            )}
-          </button>
+          <div className="relative" ref={notificationRef}>
+            <button 
+              onClick={() => {
+                setIsNotificationOpen(!isNotificationOpen);
+                setIsMessageOpen(false);
+                setIsDropdownOpen(false);
+              }}
+              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Bell className="w-5 h-5 text-gray-600" />
+              {unreadCounts.notifications > 0 && (
+                <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                  {unreadCounts.notifications > 9 ? '9+' : unreadCounts.notifications}
+                </span>
+              )}
+            </button>
+            <NotificationDropdown 
+              isOpen={isNotificationOpen} 
+              onClose={() => setIsNotificationOpen(false)} 
+            />
+          </div>
 
           {/* Mensajes */}
-          <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <MessageSquare className="w-5 h-5 text-gray-600" />
-            {messages > 0 && (
-              <span className="absolute top-1 right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                {messages}
-              </span>
-            )}
-          </button>
+          <div className="relative" ref={messageRef}>
+            <button 
+              onClick={() => {
+                setIsMessageOpen(!isMessageOpen);
+                setIsNotificationOpen(false);
+                setIsDropdownOpen(false);
+              }}
+              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <MessageSquare className="w-5 h-5 text-gray-600" />
+              {unreadCounts.messages > 0 && (
+                <span className="absolute top-1 right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                  {unreadCounts.messages > 9 ? '9+' : unreadCounts.messages}
+                </span>
+              )}
+            </button>
+            <MessageDropdown 
+              isOpen={isMessageOpen} 
+              onClose={() => setIsMessageOpen(false)} 
+            />
+          </div>
 
           {/* Usuario con Dropdown */}
           <div
@@ -89,7 +144,11 @@ const Header = () => {
             ref={dropdownRef}
           >
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              onClick={() => {
+                setIsDropdownOpen(!isDropdownOpen);
+                setIsNotificationOpen(false);
+                setIsMessageOpen(false);
+              }}
               className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors"
             >
               <span className="text-sm text-gray-700">Hola {userName}</span>
@@ -129,23 +188,12 @@ const Header = () => {
                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    navigate("/configuracion");
+                    navigate("/configuraciones");
                   }}
                   className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   <Settings className="w-4 h-4" />
-                  Configuración
-                </button>
-
-                <button
-                  onClick={() => {
-                    setIsDropdownOpen(false);
-                    navigate("/configuracion");
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <Settings className="w-4 h-4" />
-                  Preferencias
+                  Configuraciones
                 </button>
 
                 <div className="border-t border-gray-200 my-2"></div>
