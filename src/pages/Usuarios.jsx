@@ -1,22 +1,28 @@
 import { useState, useEffect } from "react";
 import { usuarioService } from "../services/usuarioService";
+import { rolService } from "../services/rolService";
 import {
   showSuccessAlert,
   showErrorAlert,
   showConfirmAlert,
 } from "../utils/sweetAlertConfig";
 import UsuarioModal from "../components/usuarios/UsuarioModal";
+import RolModal from "../components/usuarios/RolModal";
 import MainLayout from "../components/layout/MainLayout";
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiFilter } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiFilter, FiRefreshCw, FiShield } from "react-icons/fi";
 
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [filteredUsuarios, setFilteredUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterActivo, setFilterActivo] = useState("todos");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRolModalOpen, setIsRolModalOpen] = useState(false);
   const [selectedUsuario, setSelectedUsuario] = useState(null);
+  const [selectedRol, setSelectedRol] = useState(null);
+  const [activeTab, setActiveTab] = useState("usuarios");
 
   useEffect(() => {
     cargarUsuarios();
@@ -108,9 +114,76 @@ const Usuarios = () => {
     setSelectedUsuario(null);
   };
 
+  const handleRestaurarUsuario = async (id) => {
+    const result = await showConfirmAlert(
+      "¿Estás seguro de restaurar este usuario?",
+      "El usuario volverá a estar activo en el sistema.",
+      "Sí, restaurar",
+      "Cancelar"
+    );
+
+    if (result.isConfirmed) {
+      try {
+        await usuarioService.restaurarUsuario(id);
+        showSuccessAlert(
+          "¡Usuario restaurado exitosamente!",
+          "El usuario ha sido restaurado correctamente."
+        );
+        cargarUsuarios();
+      } catch (error) {
+        showErrorAlert("Error", error);
+      }
+    }
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedUsuario(null);
+  };
+
   const handleModalSuccess = () => {
     cargarUsuarios();
     handleModalClose();
+  };
+
+  const handleCrearRol = () => {
+    setSelectedRol(null);
+    setIsRolModalOpen(true);
+  };
+
+  const handleEditarRol = (rol) => {
+    setSelectedRol(rol);
+    setIsRolModalOpen(true);
+  };
+
+  const handleEliminarRol = async (id) => {
+    const result = await showConfirmAlert(
+      "¿Estás seguro de eliminar este rol?",
+      "Esta acción no se puede deshacer."
+    );
+
+    if (result.isConfirmed) {
+      try {
+        await rolService.eliminarRol(id);
+        showSuccessAlert(
+          "¡Rol eliminado exitosamente!",
+          "El rol ha sido eliminado correctamente."
+        );
+        cargarRoles();
+      } catch (error) {
+        showErrorAlert("Error", error);
+      }
+    }
+  };
+
+  const handleRolModalClose = () => {
+    setIsRolModalOpen(false);
+    setSelectedRol(null);
+  };
+
+  const handleRolModalSuccess = () => {
+    cargarRoles();
+    handleRolModalClose();
   };
 
   const usuariosActivos = usuarios.filter((u) => u.activo).length;
@@ -122,22 +195,63 @@ const Usuarios = () => {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Usuarios</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Usuarios y Roles</h1>
             <p className="text-gray-500 text-sm mt-1">
-              Administra y gestiona los usuarios del sistema
+              Administra y gestiona los usuarios y roles del sistema
             </p>
           </div>
           <button
-            onClick={handleCrearUsuario}
+            onClick={activeTab === "usuarios" ? handleCrearUsuario : handleCrearRol}
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
           >
             <FiPlus className="text-xl" />
-            Nuevo Usuario
+            {activeTab === "usuarios" ? "Nuevo Usuario" : "Nuevo Rol"}
           </button>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Tabs */}
+        <div className="bg-white rounded-lg shadow-sm">
+          <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab("usuarios")}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === "usuarios"
+                  ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
+                  : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <FiSearch className="text-lg" />
+                <span>Usuarios</span>
+                <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-bold">
+                  {usuarios.length}
+                </span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab("roles")}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === "roles"
+                  ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
+                  : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <FiShield className="text-lg" />
+                <span>Roles</span>
+                <span className="bg-purple-100 text-purple-600 px-2 py-1 rounded-full text-xs font-bold">
+                  {roles.length}
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {activeTab === "usuarios" ? (
+          <>
+            {/* Contenido de Usuarios */}
         {/* Filtros */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -292,20 +406,32 @@ const Usuarios = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditarUsuario(usuario)}
-                            className="text-green-600 hover:text-green-900 p-2 hover:bg-green-50 rounded transition-colors"
-                            title="Editar"
-                          >
-                            <FiEdit2 className="text-lg" />
-                          </button>
-                          <button
-                            onClick={() => handleEliminarUsuario(usuario.id)}
-                            className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded transition-colors"
-                            title="Eliminar"
-                          >
-                            <FiTrash2 className="text-lg" />
-                          </button>
+                          {usuario.deletedAt ? (
+                            <button
+                              onClick={() => handleRestaurarUsuario(usuario.id)}
+                              className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded transition-colors"
+                              title="Restaurar"
+                            >
+                              <FiRefreshCw className="text-lg" />
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleEditarUsuario(usuario)}
+                                className="text-green-600 hover:text-green-900 p-2 hover:bg-green-50 rounded transition-colors"
+                                title="Editar"
+                              >
+                                <FiEdit2 className="text-lg" />
+                              </button>
+                              <button
+                                onClick={() => handleEliminarUsuario(usuario.id)}
+                                className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded transition-colors"
+                                title="Eliminar"
+                              >
+                                <FiTrash2 className="text-lg" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -316,12 +442,110 @@ const Usuarios = () => {
           )}
         </div>
 
-        {/* Modal */}
+          </>
+        ) : (
+          <>
+            {/* Contenido de Roles */}
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center gap-2">
+                  <div className="bg-purple-600 p-2 rounded">
+                    <FiShield className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Tabla de Roles
+                  </h2>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="p-12 text-center">
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                  <p className="mt-4 text-gray-600">Cargando roles...</p>
+                </div>
+              ) : roles.length === 0 ? (
+                <div className="p-12 text-center text-gray-500">
+                  <p>No se encontraron roles</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          ID
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Nombre
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Descripción
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Fecha Creación
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {roles.map((rol) => (
+                        <tr key={rol.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {rol.id}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {rol.nombre}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {rol.descripcion || "-"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {new Date(rol.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleEditarRol(rol)}
+                                className="text-green-600 hover:text-green-900 p-2 hover:bg-green-50 rounded transition-colors"
+                                title="Editar"
+                              >
+                                <FiEdit2 className="text-lg" />
+                              </button>
+                              <button
+                                onClick={() => handleEliminarRol(rol.id)}
+                                className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded transition-colors"
+                                title="Eliminar"
+                              >
+                                <FiTrash2 className="text-lg" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Modales */}
         {isModalOpen && (
           <UsuarioModal
             usuario={selectedUsuario}
             onClose={handleModalClose}
             onSuccess={handleModalSuccess}
+          />
+        )}
+
+        {isRolModalOpen && (
+          <RolModal
+            rol={selectedRol}
+            onClose={handleRolModalClose}
+            onSuccess={handleRolModalSuccess}
           />
         )}
       </div>
