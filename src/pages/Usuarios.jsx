@@ -20,6 +20,7 @@ const Usuarios = () => {
 
   useEffect(() => {
     cargarUsuarios();
+    cargarRoles();
   }, []);
 
   useEffect(() => {
@@ -36,6 +37,15 @@ const Usuarios = () => {
       showErrorAlert("Error", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const cargarRoles = async () => {
+    try {
+      const data = await rolService.listarRoles();
+      setRoles(data.data || []);
+    } catch (error) {
+      console.error("Error al cargar roles:", error);
     }
   };
 

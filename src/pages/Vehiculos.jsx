@@ -27,27 +27,7 @@ const Vehiculos = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  // Estados disponibles
-  const estadosVehiculo = [
-    "En operación",
-    "En mantenimiento",
-    "Disponible",
-    "Inactivo",
-  ];
 
-  // Marcas comunes
-  const marcasVehiculo = [
-    "Hino",
-    "Isuzu",
-    "Mitsubishi",
-    "Nissan",
-    "Toyota",
-    "Ford",
-    "Chevrolet",
-    "Volvo",
-    "Mercedes-Benz",
-    "Otro",
-  ];
 
   useEffect(() => {
     cargarVehiculos();
