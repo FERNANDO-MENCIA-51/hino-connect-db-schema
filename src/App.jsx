@@ -11,6 +11,7 @@ import Roles from "./pages/Roles";
 import Conductores from "./pages/Conductores";
 import Vehiculos from "./pages/Vehiculos";
 import Movimientos from "./pages/Movimientos";
+import CreateMovimientos from './components/movimientos/CreateMovimientos'
 import Reportes from "./pages/Reportes";
 import Configuraciones from "./pages/Configuraciones";
 import Auditoria from "./pages/Auditoria";
@@ -30,6 +31,7 @@ function App() {
         <Route path="/conductores" element={<Conductores />} />
         <Route path="/vehiculos" element={<Vehiculos />} />
         <Route path="/movimientos" element={<Movimientos />} />
+        <Route path="/movimientos/nuevo" element={<CreateMovimientos />} />
         <Route path="/reportes" element={<Reportes />} />
         <Route path="/configuraciones" element={<Configuraciones />} />
         <Route path="/auditoria" element={<Auditoria />} />

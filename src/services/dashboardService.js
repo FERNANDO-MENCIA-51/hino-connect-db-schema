@@ -1,7 +1,7 @@
 import { vehiculoService } from "./vehiculoService";
 import { conductoresService } from "./conductoresService";
 import { usuarioService } from "./usuarioService";
-import { movimientoService } from "./movimientoService";
+import { movimientosService } from "./movimientosService";
 
 export const dashboardService = {
     // Obtener estadísticas generales del dashboard usando los servicios existentes
