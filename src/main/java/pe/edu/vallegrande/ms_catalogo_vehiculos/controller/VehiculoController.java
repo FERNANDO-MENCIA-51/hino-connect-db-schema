@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.vallegrande.ms_catalogo_vehiculos.dto.ApiResponse;
+import pe.edu.vallegrande.ms_catalogo_vehiculos.dto.VehiculoRequest;
 import pe.edu.vallegrande.ms_catalogo_vehiculos.model.Vehiculo;
 import pe.edu.vallegrande.ms_catalogo_vehiculos.service.VehiculoService;
+import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -48,16 +50,16 @@ public class VehiculoController {
 
     @PostMapping
     @Operation(summary = "Crear nuevo vehículo")
-    public Mono<ResponseEntity<ApiResponse<Vehiculo>>> create(@RequestBody Vehiculo vehiculo) {
-        return service.create(vehiculo)
+    public Mono<ResponseEntity<ApiResponse<Vehiculo>>> create(@Valid @RequestBody VehiculoRequest vehiculoRequest) {
+        return service.create(vehiculoRequest)
                 .map(created -> ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(created)));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar vehículo")
     public Mono<ResponseEntity<ApiResponse<Vehiculo>>> update(@PathVariable Integer id,
-            @RequestBody Vehiculo vehiculo) {
-        return service.update(id, vehiculo)
+            @Valid @RequestBody VehiculoRequest vehiculoRequest) {
+        return service.update(id, vehiculoRequest)
                 .map(updated -> ResponseEntity.ok(ApiResponse.success(updated)))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import pe.edu.vallegrande.ms_catalogo_vehiculos.dto.PageResponse;
+import pe.edu.vallegrande.ms_catalogo_vehiculos.dto.VehiculoRequest;
 import pe.edu.vallegrande.ms_catalogo_vehiculos.model.Vehiculo;
 import pe.edu.vallegrande.ms_catalogo_vehiculos.repository.VehiculoRepository;
 import reactor.core.publisher.Flux;
@@ -46,8 +47,9 @@ public class VehiculoService {
         return repository.findByIdActive(id);
     }
 
-    public Mono<Vehiculo> create(Vehiculo vehiculo) {
-        log.info("Creando vehículo con placa: {}", vehiculo.getPlaca());
+    public Mono<Vehiculo> create(VehiculoRequest vehiculoRequest) {
+        log.info("Creando vehículo con placa: {}", vehiculoRequest.getPlaca());
+        Vehiculo vehiculo = convertToEntity(vehiculoRequest);
         vehiculo.setCreatedAt(LocalDateTime.now());
         vehiculo.setUpdatedAt(LocalDateTime.now());
         return repository.save(vehiculo)
@@ -55,9 +57,10 @@ public class VehiculoService {
                 .doOnError(e -> log.error("Error al crear vehículo", e));
     }
 
-    public Mono<Vehiculo> update(Integer id, Vehiculo vehiculo) {
+    public Mono<Vehiculo> update(Integer id, VehiculoRequest vehiculoRequest) {
         return repository.findByIdActive(id)
                 .flatMap(existing -> {
+                    Vehiculo vehiculo = convertToEntity(vehiculoRequest);
                     vehiculo.setId(id);
                     vehiculo.setCreatedAt(existing.getCreatedAt());
                     vehiculo.setUpdatedAt(LocalDateTime.now());
@@ -95,5 +98,25 @@ public class VehiculoService {
         log.debug("Buscando todos los vehículos eliminados");
         return repository.findAll()
                 .filter(vehiculo -> vehiculo.getDeletedAt() != null);
+    }
+    
+    /**
+     * Convierte VehiculoRequest a Vehiculo
+     */
+    private Vehiculo convertToEntity(VehiculoRequest request) {
+        Vehiculo vehiculo = new Vehiculo();
+        vehiculo.setCodigo(request.getCodigo());
+        vehiculo.setPlaca(request.getPlaca());
+        vehiculo.setMarca(request.getMarca());
+        vehiculo.setModelo(request.getModelo());
+        vehiculo.setTipo(request.getTipo());
+        vehiculo.setAnioFabricacion(request.getAnioFabricacion());
+        vehiculo.setNumeroChasis(request.getNumeroChasis());
+        vehiculo.setCapacidadCarga(request.getCapacidadCarga());
+        vehiculo.setCombustible(request.getCombustible());
+        vehiculo.setEstadoActual(request.getEstadoActual());
+        vehiculo.setImagenUrl(request.getImagenUrl());
+        vehiculo.setActivo(request.getActivo());
+        return vehiculo;
     }
 }
