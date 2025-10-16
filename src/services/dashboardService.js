@@ -10,21 +10,25 @@ export const dashboardService = {
             console.log("🔄 Obteniendo estadísticas del dashboard...");
 
             // Obtener datos de cada servicio existente
-            const [vehiculosResponse, conductoresResponse, usuariosResponse, movimientosResponse] = await Promise.allSettled([
+            const [vehiculosActivosResponse, vehiculosEliminadosResponse, conductoresResponse, usuariosResponse, movimientosResponse] = await Promise.allSettled([
                 vehiculoService?.listarVehiculos?.() || Promise.resolve({ data: [] }),
+                vehiculoService?.listarVehiculosEliminados?.() || Promise.resolve({ data: [] }),
                 conductoresService?.listarConductores?.() || Promise.resolve({ data: [] }),
                 usuarioService?.listarUsuarios?.() || Promise.resolve({ data: [] }),
-                movimientoService?.listarMovimientos?.() || Promise.resolve({ data: [] })
+                movimientosService?.listarMovimientos?.() || Promise.resolve({ data: [] })
             ]);
 
             // Procesar vehículos
-            const vehiculos = vehiculosResponse.status === 'fulfilled' ? vehiculosResponse.value.data : [];
+            const vehiculosActivos = vehiculosActivosResponse.status === 'fulfilled' ? vehiculosActivosResponse.value.data : [];
+            const vehiculosEliminados = vehiculosEliminadosResponse.status === 'fulfilled' ? vehiculosEliminadosResponse.value.data : [];
+            const todosLosVehiculos = [...vehiculosActivos, ...vehiculosEliminados];
+            
             const vehiculosStats = {
-                total: vehiculos.length,
-                activos: vehiculos.filter(v => v.estadoActual === 'En operación').length,
-                enMantenimiento: vehiculos.filter(v => v.estadoActual === 'En mantenimiento').length,
-                disponibles: vehiculos.filter(v => v.estadoActual === 'Disponible').length,
-                inactivos: vehiculos.filter(v => v.estadoActual === 'Inactivo').length
+                total: todosLosVehiculos.length,
+                activos: vehiculosActivos.filter(v => v.estadoActual === 'En operación').length,
+                enMantenimiento: vehiculosActivos.filter(v => v.estadoActual === 'En mantenimiento').length,
+                disponibles: vehiculosActivos.filter(v => v.estadoActual === 'Disponible').length,
+                inactivos: vehiculosEliminados.length + vehiculosActivos.filter(v => v.estadoActual === 'Inactivo').length
             };
 
             // Procesar conductores
@@ -63,7 +67,9 @@ export const dashboardService = {
 
             console.log("✅ Estadísticas obtenidas:", stats);
             console.log("📊 Detalles por servicio:");
-            console.log("- Vehículos:", vehiculos.length, vehiculos);
+            console.log("- Vehículos Activos:", vehiculosActivos.length, vehiculosActivos);
+            console.log("- Vehículos Eliminados:", vehiculosEliminados.length, vehiculosEliminados);
+            console.log("- Total Vehículos:", todosLosVehiculos.length);
             console.log("- Conductores:", conductores.length, conductores);
             console.log("- Usuarios:", usuarios.length, usuarios);
             console.log("- Movimientos:", movimientos.length, movimientos);
@@ -86,7 +92,7 @@ export const dashboardService = {
     getMovimientosChart: async () => {
         try {
             // Obtener movimientos reales
-            const movimientosResponse = await movimientoService?.listarMovimientos?.() || { data: [] };
+            const movimientosResponse = await movimientosService?.listarMovimientos?.() || { data: [] };
             const movimientos = movimientosResponse.data || [];
 
             // Generar datos por mes basados en movimientos reales
@@ -130,7 +136,7 @@ export const dashboardService = {
     getMovimientoSemanal: async () => {
         try {
             // Obtener movimientos reales
-            const movimientosResponse = await movimientoService?.listarMovimientos?.() || { data: [] };
+            const movimientosResponse = await movimientosService?.listarMovimientos?.() || { data: [] };
             const movimientos = movimientosResponse.data || [];
 
             const diasSemana = ["Dom", "Lun", "Mar", "Mier", "Juev", "Vier", "Sab"];

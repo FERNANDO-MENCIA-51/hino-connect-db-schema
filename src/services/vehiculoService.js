@@ -107,16 +107,54 @@ export const vehiculoService = {
     }
   },
 
+  // Listar vehículos eliminados (soft delete)
+  listarVehiculosEliminados: async () => {
+    try {
+      console.log("🔍 Obteniendo vehículos eliminados...");
+      const response = await api.get("/vehiculos/deleted");
+      console.log("✅ Vehículos eliminados obtenidos:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error al listar vehículos eliminados:", error);
+      throw error.response?.data?.message || "Error al obtener vehículos eliminados";
+    }
+  },
+
   // Restaurar vehículo (soft delete)
   restaurarVehiculo: async (id) => {
     try {
       console.log("🔄 Restaurando vehículo con ID:", id);
-      const response = await api.put(`/vehiculos/restaurar/${id}`);
+      const response = await api.put(`/vehiculos/${id}/restore`);
       console.log("✅ Vehículo restaurado exitosamente:", response.data);
       return response.data;
     } catch (error) {
       console.error("❌ Error al restaurar vehículo:", error);
       throw error.response?.data?.message || "Error al restaurar vehículo";
+    }
+  },
+
+  // Actualizar estado de vehículo
+  actualizarEstadoVehiculo: async (id, estado) => {
+    try {
+      console.log("🔄 Actualizando estado del vehículo con ID:", id, "a:", estado);
+      
+      // Primero obtener el vehículo completo
+      const vehiculoResponse = await api.get(`/vehiculos/${id}`);
+      const vehiculo = vehiculoResponse.data.data;
+      
+      // Actualizar solo el estado manteniendo todos los demás campos
+      const vehiculoActualizado = {
+        ...vehiculo,
+        estadoActual: estado
+      };
+      
+      // Actualizar el vehículo con todos los campos
+      const response = await api.put(`/vehiculos/${id}`, vehiculoActualizado);
+      console.log("✅ Estado del vehículo actualizado exitosamente:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error al actualizar estado del vehículo:", error);
+      throw error.response?.data?.message || "Error al actualizar estado del vehículo";
     }
   },
 };

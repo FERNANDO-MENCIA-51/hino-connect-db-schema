@@ -15,11 +15,14 @@ import { FiPlus, FiEdit2, FiTrash2, FiEye, FiRefreshCw } from "react-icons/fi";
 
 const Vehiculos = () => {
   const [vehiculos, setVehiculos] = useState([]);
+  const [vehiculosEliminados, setVehiculosEliminados] = useState([]);
+  const [vehiculosActivos, setVehiculosActivos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVehiculo, setSelectedVehiculo] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedVehiculoId, setSelectedVehiculoId] = useState(null);
+  const [mostrandoEliminados, setMostrandoEliminados] = useState(false);
 
   // Hook para manejar filtros
   const {
@@ -38,16 +41,31 @@ const Vehiculos = () => {
   });
 
   useEffect(() => {
-    cargarVehiculos();
-  }, []);
+    cargarVehiculos(mostrandoEliminados);
+  }, [mostrandoEliminados]);
 
-  const cargarVehiculos = async () => {
+  const cargarVehiculos = async (mostrarEliminados = false) => {
     try {
       setLoading(true);
-      console.log("🔄 Cargando vehículos...");
-      const data = await vehiculoService.listarVehiculos();
-      console.log("📊 Datos recibidos del backend:", data);
-      setVehiculos(data.data || []);
+      console.log("🔄 Cargando vehículos...", mostrarEliminados ? "(eliminados)" : "(activos)");
+      
+      // Cargar siempre ambos tipos para mantener los conteos actualizados
+      const [activosData, eliminadosData] = await Promise.all([
+        vehiculoService.listarVehiculos(),
+        vehiculoService.listarVehiculosEliminados()
+      ]);
+      
+      setVehiculosActivos(activosData.data || []);
+      setVehiculosEliminados(eliminadosData.data || []);
+      
+      // Mostrar la lista correspondiente según el filtro
+      if (mostrarEliminados) {
+        setVehiculos(eliminadosData.data || []);
+      } else {
+        setVehiculos(activosData.data || []);
+      }
+      
+      console.log("📊 Datos recibidos del backend:", { activos: activosData, eliminados: eliminadosData });
     } catch (error) {
       console.error("❌ Error al cargar vehículos:", error);
       showErrorAlert("Error", error);
@@ -87,17 +105,20 @@ const Vehiculos = () => {
   const handleEliminarVehiculo = async (id) => {
     const result = await showConfirmAlert(
       "¿Estás seguro de eliminar este vehículo?",
-      "Al eliminar el vehículo, este será removido de tu lista. Podrás volver a activarlo en el futuro si lo necesitas."
+      "Al eliminar el vehículo, este será removido de tu lista y su estado cambiará a Inactivo. Podrás volver a activarlo en el futuro si lo necesitas."
     );
 
     if (result.isConfirmed) {
       try {
+        // Primero actualizar el estado a Inactivo
+        await vehiculoService.actualizarEstadoVehiculo(id, "Inactivo");
+        // Luego eliminar el vehículo (soft delete)
         await vehiculoService.eliminarVehiculo(id);
         showSuccessAlert(
           "¡Vehículo eliminado exitosamente!",
-          "El vehículo ha sido eliminado correctamente."
+          "El vehículo ha sido eliminado correctamente y su estado cambió a Inactivo."
         );
-        cargarVehiculos();
+        cargarVehiculos(mostrandoEliminados);
       } catch (error) {
         showErrorAlert("Error", error);
       }
@@ -107,19 +128,22 @@ const Vehiculos = () => {
   const handleRestaurarVehiculo = async (id) => {
     const result = await showConfirmAlert(
       "¿Estás seguro de restaurar este vehículo?",
-      "El vehículo volverá a estar activo en el sistema.",
+      "El vehículo volverá a estar activo en el sistema y su estado cambiará a Disponible.",
       "Sí, restaurar",
       "Cancelar"
     );
 
     if (result.isConfirmed) {
       try {
+        // Primero restaurar el vehículo (soft delete)
         await vehiculoService.restaurarVehiculo(id);
+        // Luego actualizar el estado a Disponible
+        await vehiculoService.actualizarEstadoVehiculo(id, "Disponible");
         showSuccessAlert(
           "¡Vehículo restaurado exitosamente!",
-          "El vehículo ha sido restaurado correctamente."
+          "El vehículo ha sido restaurado correctamente y su estado cambió a Disponible."
         );
-        cargarVehiculos();
+        cargarVehiculos(mostrandoEliminados);
       } catch (error) {
         showErrorAlert("Error", error);
       }
@@ -139,6 +163,11 @@ const Vehiculos = () => {
   const handleDetailClose = () => {
     setIsDetailOpen(false);
     setSelectedVehiculoId(null);
+  };
+
+  const handleActiveFilterChange = (filter) => {
+    setActiveFilter(filter);
+    setMostrandoEliminados(filter === 'inactive');
   };
 
   return (
@@ -168,7 +197,7 @@ const Vehiculos = () => {
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
           activeFilterValue={activeFilter}
-          onActiveFilterChange={setActiveFilter}
+          onActiveFilterChange={handleActiveFilterChange}
           searchPlaceholder="Buscar por código, placa, marca o modelo..."
           activeLabel="Activos"
           inactiveLabel="Eliminados"
@@ -222,13 +251,13 @@ const Vehiculos = () => {
           <div className="bg-success-500 text-white px-6 py-3 rounded-lg flex items-center gap-2">
             <span className="font-semibold">Vehículos Activos</span>
             <span className="bg-white text-success-500 px-3 py-1 rounded-full font-bold">
-              {vehiculos.filter(v => v.activo && !v.deletedAt).length}
+              {vehiculosActivos.length}
             </span>
           </div>
           <div className="bg-danger-500 text-white px-6 py-3 rounded-lg flex items-center gap-2">
             <span className="font-semibold">Vehículos Eliminados</span>
             <span className="bg-white text-danger-500 px-3 py-1 rounded-full font-bold">
-              {vehiculos.filter(v => !v.activo || v.deletedAt).length}
+              {vehiculosEliminados.length}
             </span>
           </div>
           <div className="bg-info-500 text-white px-6 py-3 rounded-lg flex items-center gap-2">
@@ -265,7 +294,7 @@ const Vehiculos = () => {
                 </svg>
               </div>
               <h2 className="text-lg font-semibold text-gray-800">
-                Tabla de Vehículos
+                {mostrandoEliminados ? "Vehículos Eliminados" : "Vehículos Activos"}
               </h2>
             </div>
           </div>
@@ -302,6 +331,11 @@ const Vehiculos = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Capacidad
                     </th>
+                    {mostrandoEliminados && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Fecha Eliminación
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Acciones
                     </th>
@@ -326,14 +360,21 @@ const Vehiculos = () => {
                         {vehiculo.tipo}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <VehicleStatusBadge status={vehiculo.estadoActual} />
+                        <VehicleStatusBadge 
+                          status={vehiculo.deletedAt ? "Inactivo" : vehiculo.estadoActual} 
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {vehiculo.capacidadCarga ? `${vehiculo.capacidadCarga} kg` : "-"}
                       </td>
+                      {mostrandoEliminados && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {vehiculo.deletedAt ? new Date(vehiculo.deletedAt).toLocaleDateString() : "-"}
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex gap-2">
-                          {vehiculo.deletedAt ? (
+                          {mostrandoEliminados ? (
                             <button
                               onClick={() => handleRestaurarVehiculo(vehiculo.id)}
                               className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded transition-colors"
