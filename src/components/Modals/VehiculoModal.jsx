@@ -14,7 +14,7 @@ const VehiculoModal = ({ isOpen, onClose, vehiculo, onSuccess }) => {
     numeroChasis: "",
     capacidadCarga: "",
     combustible: "Diesel",
-    estadoActual: "disponible",
+    estadoActual: "Disponible",
     imagenUrl: "",
     activo: true,
   });
@@ -39,7 +39,7 @@ const VehiculoModal = ({ isOpen, onClose, vehiculo, onSuccess }) => {
       numeroChasis: "",
       capacidadCarga: "",
       combustible: "Diesel",
-      estadoActual: "disponible",
+      estadoActual: "Disponible",
       imagenUrl: "",
       activo: true,
     });
@@ -58,14 +58,50 @@ const VehiculoModal = ({ isOpen, onClose, vehiculo, onSuccess }) => {
     setLoading(true);
 
     try {
+      // Validar formato de placa
+      const placaRegex = /^[A-Z]{3}-[0-9]{3}$/;
+      const placaTrimmed = formData.placa?.trim();
+      
+      if (placaTrimmed && !placaRegex.test(placaTrimmed)) {
+        showErrorAlert(
+          "Error de Validación",
+          "La placa debe tener el formato ABC-123 (3 letras, guión, 3 números)"
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Limpiar y preparar los datos
+      const cleanData = {
+        codigo: formData.codigo?.trim(),
+        placa: placaTrimmed,
+        marca: formData.marca?.trim(),
+        modelo: formData.modelo?.trim(),
+        tipo: formData.tipo?.trim() || null,
+        anioFabricacion: formData.anioFabricacion ? parseInt(formData.anioFabricacion) : null,
+        numeroChasis: formData.numeroChasis?.trim() || null,
+        capacidadCarga: formData.capacidadCarga ? parseInt(formData.capacidadCarga) : null,
+        combustible: formData.combustible || "Diesel",
+        estadoActual: formData.estadoActual || "Disponible",
+        imagenUrl: formData.imagenUrl?.trim() || null,
+        activo: formData.activo !== undefined ? formData.activo : true,
+      };
+
+      // Debug: mostrar los datos que se van a enviar
+      console.log("=== DEBUG VEHÍCULO ===");
+      console.log("Vehículo ID:", vehiculo?.id);
+      console.log("Datos originales:", formData);
+      console.log("Datos limpios:", cleanData);
+      console.log("Tipo de operación:", vehiculo ? "UPDATE" : "CREATE");
+
       if (vehiculo) {
-        await vehiculoService.update(vehiculo.id, formData);
+        await vehiculoService.update(vehiculo.id, cleanData);
         showSuccessAlert(
           "¡Vehículo Actualizado!",
           "El vehículo fue actualizado correctamente."
         );
       } else {
-        await vehiculoService.create(formData);
+        await vehiculoService.create(cleanData);
         showSuccessAlert(
           "¡Vehículo Creado!",
           "El vehículo fue creado correctamente."
@@ -74,10 +110,26 @@ const VehiculoModal = ({ isOpen, onClose, vehiculo, onSuccess }) => {
       onSuccess();
       onClose();
     } catch (error) {
-      showErrorAlert(
-        "Error",
-        error.response?.data?.message || "No se pudo guardar el vehículo"
-      );
+      console.error("Error completo:", error);
+      console.error("Error response:", error.response);
+      console.error("Error data:", error.response?.data);
+      
+      // Manejar errores de validación del backend
+      let errorMessage = "No se pudo guardar el vehículo";
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        // Si hay errores de validación específicos
+        const validationErrors = error.response.data.errors;
+        errorMessage = `Errores de validación: ${validationErrors.join(', ')}`;
+      } else if (error.response?.status === 400) {
+        errorMessage = "Datos inválidos. Verifica que todos los campos estén correctos.";
+      } else if (error.response?.status === 500) {
+        errorMessage = "Error interno del servidor. Intenta nuevamente.";
+      }
+      
+      showErrorAlert("Error", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -297,10 +349,10 @@ const VehiculoModal = ({ isOpen, onClose, vehiculo, onSuccess }) => {
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="disponible">Disponible</option>
-                    <option value="en_operacion">En Operación</option>
-                    <option value="en_mantenimiento">En Mantenimiento</option>
-                    <option value="inactivo">Inactivo</option>
+                    <option value="Disponible">Disponible</option>
+                    <option value="En operación">En Operación</option>
+                    <option value="En mantenimiento">En Mantenimiento</option>
+                    <option value="Inactivo">Inactivo</option>
                   </select>
                 </div>
               </div>

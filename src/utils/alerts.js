@@ -9,9 +9,6 @@ export const showSuccessAlert = (title, text) => {
     confirmButtonText: "OK",
     timer: 3000,
     timerProgressBar: true,
-    customClass: {
-      confirmButton: "swal-button-custom",
-    },
   });
 };
 
@@ -22,9 +19,6 @@ export const showErrorAlert = (title, text) => {
     text,
     confirmButtonColor: "#ef4444",
     confirmButtonText: "OK",
-    customClass: {
-      confirmButton: "swal-button-custom",
-    },
   });
 };
 
@@ -35,9 +29,6 @@ export const showWarningAlert = (title, text) => {
     text,
     confirmButtonColor: "#f59e0b",
     confirmButtonText: "OK",
-    customClass: {
-      confirmButton: "swal-button-custom",
-    },
   });
 };
 
@@ -57,10 +48,7 @@ export const showConfirmAlert = (
     confirmButtonText: confirmText,
     cancelButtonText: cancelText,
     reverseButtons: true,
-    customClass: {
-      confirmButton: "swal-button-custom",
-      cancelButton: "swal-button-custom",
-    },
+    buttonsStyling: true,
   });
 };
 
@@ -75,10 +63,7 @@ export const showRestoreConfirm = (title, text) => {
     confirmButtonText: "Sí, restaurar",
     cancelButtonText: "Cancelar",
     reverseButtons: true,
-    customClass: {
-      confirmButton: "swal-button-custom",
-      cancelButton: "swal-button-custom",
-    },
+    buttonsStyling: true,
   });
 };
 
