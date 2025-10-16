@@ -1,8 +1,9 @@
 package pe.edu.vallegrande.ms_catalogo_vehiculos.service;
 
+import org.springframework.stereotype.Service;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import pe.edu.vallegrande.ms_catalogo_vehiculos.dto.LoginRequest;
 import pe.edu.vallegrande.ms_catalogo_vehiculos.dto.LoginResponse;
 import pe.edu.vallegrande.ms_catalogo_vehiculos.repository.RolRepository;
@@ -48,16 +49,19 @@ public class AuthService {
                                 // Obtener rol y generar token
                                 return rolRepository.findById(usuario.getRolId())
                                         .switchIfEmpty(Mono.error(new RuntimeException("Rol no encontrado")))
-                                        .map(rol -> {
+                                        .flatMap(rol -> {
                                             String token = jwtUtil.generateToken(
                                                     usuario.getEmail(),
                                                     usuario.getNombre() + " " + usuario.getApellido(),
                                                     rol.getNombre());
-                                            return new LoginResponse(
-                                                    token,
-                                                    usuario.getEmail(),
-                                                    usuario.getNombre() + " " + usuario.getApellido(),
-                                                    rol.getNombre());
+
+                                            // ⭐ ACTUALIZAR ÚLTIMO LOGIN
+                                            return usuarioService.updateUltimoLogin(usuario.getId())
+                                                    .thenReturn(new LoginResponse(
+                                                            token,
+                                                            usuario.getEmail(),
+                                                            usuario.getNombre() + " " + usuario.getApellido(),
+                                                            rol.getNombre()));
                                         });
                             });
                 });
